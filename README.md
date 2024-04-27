@@ -1,6 +1,7 @@
-## API (WIP)
+# API (WIP)
 
 **Users**
+
 Get all users 
 - GET /users/
 
