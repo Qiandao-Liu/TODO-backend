@@ -1,6 +1,6 @@
 # API (WIP)
 
-**Users**
+## Users
 
 Get all users 
 - GET /users/
@@ -17,10 +17,9 @@ Add bookmark
 Remove bookmark
 - DELETE /users/<int:user_id>/bookmark/
 
+<br />
 
-
-
-**Recipes**
+## Recipes
 
 Get all recipes
 - GET /recipes/
