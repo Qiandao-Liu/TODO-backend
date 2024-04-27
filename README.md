@@ -18,7 +18,10 @@ Remove bookmark
 - DELETE /users/<int:user_id>/bookmark/
 
 
+
+
 **Recipes**
+
 Get all recipes
 - GET /recipes/
 
