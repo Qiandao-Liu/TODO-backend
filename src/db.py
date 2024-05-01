@@ -2,9 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-saved_recipes_table = db.Table("bookmarks_users", db.Model.metadata,
-                               db.Column("recipe_id", db.Integer, db.ForeignKey("recipe.id")),
-                               db.Column("user_id", db.Integer, db.ForeignKey("user.id")))
+saved_recipes_table = db.Table("user_bookmarks", db.Model.metadata,
+                               db.Column("recipe_id", db.Integer, db.ForeignKey("recipes.id")),
+                               db.Column("user_id", db.Integer, db.ForeignKey("users.id")))
 
 
 # your classes here
@@ -43,7 +43,7 @@ class Recipe(db.Model):
     # Can't make it a list unless we make it another table relationship (meaning that users have less flexibility)
     ingredients = db.Column(db.String, nullable=False)
     directions = db.Column(db.String, nullable=False)
-    publisher_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    publisher_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     bookmarkers = db.relationship("User", secondary=saved_recipes_table, back_populates='bookmarked_recipes')
 
     def __init__(self, title, ingredients, directions, publisher_id, image=None, description=None):
@@ -60,7 +60,7 @@ class Recipe(db.Model):
             "title": self.title,
             "ingredients": self.ingredients,
             "directions": self.directions,
-            "owner": self.publisher_id.simple_serialize(),
+            "publisher": User.query.filterby(id=self.publisher_id).first().simple_serialize()
         }
         if self.description is not None:
             dic["description"] = self.description
