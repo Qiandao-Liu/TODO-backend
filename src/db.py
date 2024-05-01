@@ -7,7 +7,6 @@ saved_recipes_table = db.Table("user_bookmarks", db.Model.metadata,
                                db.Column("user_id", db.Integer, db.ForeignKey("users.id")))
 
 
-# your classes here
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
