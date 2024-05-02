@@ -1,5 +1,6 @@
 from db import db, User, Recipe
-from flask import Flask, json, request
+from flask import Flask, request
+import json
 
 app = Flask(__name__)
 db_filename = "cms.db"
@@ -46,7 +47,7 @@ def get_specific_user(user_id):
 def create_user():
     body = json.loads(request.data)
     if body.get('username') is None:
-        return failure_response("Bad Request", 400)
+        return failure_response("Bad Request - Username is required", 400)
     new_user = User(
         username=body.get('username')
     )
@@ -54,13 +55,10 @@ def create_user():
     db.session.commit()
     return success_response(new_user.serialize(), 201)
 
-@app.route("/users/<int:user_id>/bookmark/", methods=["POST"])
-def bookmark_recipe(user_id):
-    body = json.loads(request.data)
-    if body.get("bookmark_id") is None:
-        return failure_response("Bad Request", 400)
-    user = User.query(User.id).filter_by(id=user_id).first()
-    recipe = Recipe.query(Recipe.id).filter_by(id=body.get("bookmark_id")).first()
+@app.route("/users/<int:user_id>/bookmark/<int:recipe_id>/", methods=["POST"])
+def bookmark_recipe(user_id, recipe_id):
+    user = User.query.filter_by(id=user_id).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
     if user is None:
         return failure_response("User not Found", 404)
     elif recipe is None:
@@ -70,13 +68,10 @@ def bookmark_recipe(user_id):
     db.session.commit()
     return success_response(user.serialize())
 
-@app.route("/users/<int:user_id>/bookmark/", methods=["DELETE"])
-def remove_bookmark(user_id):
-    body = json.loads(request.data)
-    if body.get("bookmark_id") is None:
-        return failure_response("Bad Request", 400)
-    user = User.query(User.id).filter_by(id=user_id).first()
-    recipe = Recipe.query(Recipe.id).filter_by(id=body.get("bookmark_id")).first()
+@app.route("/users/<int:user_id>/bookmark/<int:recipe_id>/", methods=["DELETE"])
+def remove_bookmark(user_id, recipe_id):
+    user = User.query.filter_by(id=user_id).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
     if user is None:
         return failure_response("User not Found", 404)
     elif recipe is None:
@@ -84,7 +79,6 @@ def remove_bookmark(user_id):
     elif recipe not in user.bookmarked_recipes:
         return failure_response("Bookmark not Found", 404)
     user.bookmarked_recipes.remove(recipe)
-    recipe.bookmarkers.remove(user)
     db.session.commit()
     return success_response(user.serialize())
 
@@ -110,13 +104,13 @@ def get_specific_recipe(recipe_id):
     return success_response(recipe.serialize())
 
 
-@app.route("/recipes/create/<int:user_id>/", methods=["POST"])
+@app.route("/users/<int:user_id>/recipes/", methods=["POST"])
 def create_recipe(user_id):
     body = json.loads(request.data)
     if (body.get("title") is None or body.get("ingredients") is None or body.get("directions") is None
-            or body.get("difficulty") is None or body.get("difficulty") > 3 or body.get("difficulty") < 0):
-        return failure_response("Bad Request", 400)
-    user = User.query(User.id).filter_by(id=user_id).first()
+            or body.get("difficulty") is None or (isinstance(body.get("difficulty"), int) and (body.get("difficulty") > 3 or body.get("difficulty") < 0))):
+        return failure_response("Bad Request - Title, Ingredients, Directions, and Difficulty are required", 400)
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not Found", 404)
     new_recipe = Recipe(
@@ -136,9 +130,12 @@ def create_recipe(user_id):
 @app.route("/recipes/<int:recipe_id>/", methods=["POST"])
 def update_recipe(recipe_id):
     body = json.loads(request.data)
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
     if all(value is None for value in body.values()):
-        return failure_response("Bad Request", 400)
-    recipe = Recipe.query(Recipe.id).filter_by(id=body.get("recipe_id")).first()
+        return failure_response("Bad Request - Body should not be empty", 400)
+    for k in body.keys():
+        if not hasattr(recipe, k):
+            return failure_response("Bad Request - Recipe has no property " + k, 400)
     for k in body.keys():
         v = body.get(k)
         if v is None:

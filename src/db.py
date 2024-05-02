@@ -6,7 +6,7 @@ saved_recipes_table = db.Table("user_bookmarks", db.Model.metadata,
                                db.Column("recipe_id", db.Integer, db.ForeignKey("recipes.id")),
                                db.Column("user_id", db.Integer, db.ForeignKey("users.id")))
 
-difficulties = ["", "", "Iron Chef"]
+difficulties = ["beginner", "intermediate", "advanced"]
 
 
 class User(db.Model):
@@ -62,14 +62,23 @@ class Recipe(db.Model):
     bookmarkers = db.relationship("User", secondary=saved_recipes_table, back_populates='bookmarked_recipes')
     difficulty = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, title, ingredients, directions, publisher_id, difficulty, image=None, description=None):
+    def __init__(self, title, ingredients, directions, publisher_id, difficulty=0, image=None, description=None):
         self.title = title
         self.ingredients = ingredients
         self.directions = directions
         self.publisher_id = publisher_id
         self.image = image
         self.description = description
-        self.difficulty = difficulty
+        self.difficulty = 0
+        if isinstance(difficulty, str):
+            if difficulty.lower == "beginner":
+                self.difficulty = 0
+            elif difficulty.lower == "intermediate":
+                self.difficulty = 1
+            elif difficulty.lower == "advanced":
+                self.difficulty = 2
+        elif isinstance(difficulty, int) and 0 <= difficulty <= 2:
+            self.difficulty = difficulty
 
     def serialize(self):
         dic =  {
@@ -78,7 +87,7 @@ class Recipe(db.Model):
             "ingredients": self.ingredients,
             "directions": self.directions,
             "difficulty": difficulties[self.difficulty],
-            "publisher": User.query.filterby(id=self.publisher_id).first().simple_serialize()
+            "publisher": User.query.filter_by(id=self.publisher_id).first().simple_serialize()
         }
         if self.description is not None:
             dic["description"] = self.description
