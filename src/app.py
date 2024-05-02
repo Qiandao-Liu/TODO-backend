@@ -45,6 +45,10 @@ def get_specific_user(user_id):
 
 @app.route("/users/", methods=["POST"])
 def create_user():
+    """
+    Endpoint for creating a user
+    """
+    
     body = json.loads(request.data)
     if body.get('username') is None:
         return failure_response("Bad Request - Username is required", 400)
@@ -55,8 +59,28 @@ def create_user():
     db.session.commit()
     return success_response(new_user.serialize(), 201)
 
+@app.route("/users/<int:user_id>/", methods=["DELETE"])
+def delete_user(user_id):
+    """
+    Endpoint for deleting a user
+    """
+
+    user = User.query.filter_by(id=user_id).first()
+
+    if user is None:
+        return failure_response("User not found")
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return success_response(user.serialize())
+
 @app.route("/users/<int:user_id>/bookmark/<int:recipe_id>/", methods=["POST"])
 def bookmark_recipe(user_id, recipe_id):
+    """
+    Endpoint for bookmarking a recipe
+    """
+    
     user = User.query.filter_by(id=user_id).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     if user is None:
@@ -70,6 +94,10 @@ def bookmark_recipe(user_id, recipe_id):
 
 @app.route("/users/<int:user_id>/bookmark/<int:recipe_id>/", methods=["DELETE"])
 def remove_bookmark(user_id, recipe_id):
+    """
+    Endpoint for unbookmarking a recipe
+    """
+    
     user = User.query.filter_by(id=user_id).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     if user is None:
@@ -106,6 +134,10 @@ def get_specific_recipe(recipe_id):
 
 @app.route("/users/<int:user_id>/recipes/", methods=["POST"])
 def create_recipe(user_id):
+    """
+    Endpoint for creating a recipe
+    """
+    
     body = json.loads(request.data)
     if (body.get("title") is None or body.get("ingredients") is None or body.get("directions") is None
             or body.get("difficulty") is None or (isinstance(body.get("difficulty"), int) and (body.get("difficulty") > 3 or body.get("difficulty") < 0))):
@@ -129,6 +161,10 @@ def create_recipe(user_id):
 
 @app.route("/recipes/<int:recipe_id>/", methods=["POST"])
 def update_recipe(recipe_id):
+    """
+    Endpoint for modifying a recipe
+    """
+    
     body = json.loads(request.data)
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     if all(value is None for value in body.values()):
@@ -142,6 +178,22 @@ def update_recipe(recipe_id):
             continue
         setattr(recipe, k, v)
     db.session.commit()
+    return success_response(recipe.serialize())
+
+@app.route("/recipes/<int:recipe_id>/", methods=["DELETE"])
+def delete_recipe(recipe_id):
+    """
+    Endpoint for deleting a recipe
+    """
+
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+
+    if recipe is None:
+        return failure_response("Recipe not found")
+
+    db.session.delete(recipe)
+    db.session.commit()
+
     return success_response(recipe.serialize())
 
 
