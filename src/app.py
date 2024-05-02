@@ -154,6 +154,9 @@ def create_recipe(user_id):
         description=body.get("description"),
         difficulty=body.get("difficulty")
     )
+    for k in body.keys():
+        if not hasattr(new_recipe, k):
+            return failure_response("Bad Request - Recipe has no property " + k, 400)
     db.session.add(new_recipe)
     db.session.commit()
     return success_response(new_recipe.serialize(), 201)
