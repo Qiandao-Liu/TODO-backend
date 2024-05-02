@@ -17,6 +17,20 @@ class User(db.Model):
     def __init__(self, username):
         self.username = username
 
+    def setBookmark(self, bookmark_id):
+        recipe = db.session.query(Recipe.id).filter_by(id=bookmark_id).first()
+        if recipe is not None:
+            self.bookmarked_recipes.append(bookmark_id)
+            return True
+        return False
+
+    def removeBookmark(self, bookmark_id):
+        try:
+            self.bookmarked_recipes.remove(bookmark_id)
+            return True
+        except ValueError:
+            return False
+
     def serialize(self):
         return {
             "id": self.id,
