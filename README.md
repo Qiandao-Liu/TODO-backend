@@ -28,7 +28,7 @@ Get recipe by id
 - GET /recipes/<int:recipe_id>/
 
 Create recipe
-- POST /recipes/
+- POST /recipes/create/<int:user_id>/
 
 Update recipe
 - POST /recipes/<int:recipe_id>/
