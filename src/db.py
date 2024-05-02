@@ -6,6 +6,8 @@ saved_recipes_table = db.Table("user_bookmarks", db.Model.metadata,
                                db.Column("recipe_id", db.Integer, db.ForeignKey("recipes.id")),
                                db.Column("user_id", db.Integer, db.ForeignKey("users.id")))
 
+difficulties = ["", "", "Iron Chef"]
+
 
 class User(db.Model):
     __tablename__ = "users"
@@ -58,14 +60,16 @@ class Recipe(db.Model):
     directions = db.Column(db.String, nullable=False)
     publisher_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     bookmarkers = db.relationship("User", secondary=saved_recipes_table, back_populates='bookmarked_recipes')
+    difficulty = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, title, ingredients, directions, publisher_id, image=None, description=None):
+    def __init__(self, title, ingredients, directions, publisher_id, difficulty, image=None, description=None):
         self.title = title
         self.ingredients = ingredients
         self.directions = directions
         self.publisher_id = publisher_id
         self.image = image
         self.description = description
+        self.difficulty = difficulty
 
     def serialize(self):
         dic =  {
@@ -73,6 +77,7 @@ class Recipe(db.Model):
             "title": self.title,
             "ingredients": self.ingredients,
             "directions": self.directions,
+            "difficulty": difficulties[self.difficulty],
             "publisher": User.query.filterby(id=self.publisher_id).first().simple_serialize()
         }
         if self.description is not None:
@@ -84,5 +89,6 @@ class Recipe(db.Model):
     def simple_serialize(self):
         return {
             "id": self.id,
-            "title": self.title
+            "title": self.title,
+            "difficulty": difficulties[self.difficulty]
         }

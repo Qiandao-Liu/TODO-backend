@@ -88,6 +88,7 @@ def remove_bookmark(user_id):
     db.session.commit()
     return success_response(user.serialize())
 
+
 @app.route("/recipes/")
 def get_recipes():
     """
@@ -95,31 +96,37 @@ def get_recipes():
     """
     return success_response({"recipes": [r.serialize() for r in Recipe.query.all()]})
 
+
 @app.route("/recipes/<int:recipe_id>/")
 def get_specific_recipe(recipe_id):
     """
     Endpoint for getting a specific recipe
     """
-    recipe = User.query.filter_by(id=recipe_id).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
 
     if recipe is None:
         return failure_response("Recipe not found")
 
     return success_response(recipe.serialize())
 
-@app.route("/recipes/", methods=["POST"])
-def create_recipe():
+
+@app.route("/recipes/create/<int:user_id>/", methods=["POST"])
+def create_recipe(user_id):
     body = json.loads(request.data)
-    if (body.get("title") is None or body.get("ingredients") is None or body.get("directions")
-        is None or body.get("publisher_id") is None):
+    if (body.get("title") is None or body.get("ingredients") is None or body.get("directions") is None
+            or body.get("difficulty") is None or body.get("difficulty") > 3 or body.get("difficulty") < 0):
         return failure_response("Bad Request", 400)
+    user = User.query(User.id).filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("User not Found", 404)
     new_recipe = Recipe(
         title=body.get("title"),
         ingredients=body.get("ingredients"),
         directions=body.get("directions"),
-        publisher_id=body.get("publisher_id"),
+        publisher_id=user_id,
         image=body.get("image"),
-        description=body.get("description")
+        description=body.get("description"),
+        difficulty=body.get("difficulty")
     )
     db.session.add(new_recipe)
     db.session.commit()
